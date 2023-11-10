@@ -1,0 +1,84 @@
+READER WRITER  
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h> // Include this for the sleep function
+
+sem_t r, w;
+int rdcnt = 0;
+FILE *fptr;
+
+void *reader(void *args)
+{
+	sem_wait(&r);
+ 	rdcnt++;
+	 if (rdcnt == 1)
+	 {
+	 sem_wait(&w);
+	 sem_post(&r);
+	 // Replace the read() function with your own reading logic.
+	 // For example, you can read from a file.
+	 fptr = fopen("filename.txt", "r");
+		 
+		 if (fptr == NULL)
+		 {
+			 perror("Error opening file");
+		 }
+		 
+		 else
+		 {
+		 	char ch;
+		 	while ((ch = fgetc(fptr)) != EOF)
+		 	{
+		 		printf("%c", ch);
+		 	}
+		 	fclose(fptr);
+		 }
+	 	 printf("\tReader. \tid = %lu \n", pthread_self());
+		 sem_wait(&r);
+		 rdcnt--;
+		 if (rdcnt == 0)
+		 {
+			 sem_post(&w);
+			 sem_post(&r);
+		 }
+	 }
+	 sleep(3);
+}
+
+void *writer(void *arg)
+{
+	 sem_wait(&w);
+	 printf("Writer. \tid = %lu \n", pthread_self());
+	 sem_post(&w);
+	 sleep(3);
+}
+
+int main()
+{
+	 pthread_t wrt[4], rdr[4];
+	 sem_init(&r, 0, 1);
+	 sem_init(&w, 0, 1);
+	 fptr = fopen("filename.txt", "w");
+	 fclose(fptr);
+	 for (int i = 0; i < 4; i++)
+	 pthread_create(&wrt[i], NULL, writer, NULL);
+	 for (int i = 0; i < 4; i++)
+	 pthread_create(&rdr[i], NULL, reader, NULL);
+	 for (int i = 0; i < 4; i++)
+	 pthread_join(wrt[i], NULL);
+	 for (int i = 0; i < 4; i++)
+	 pthread_join(rdr[i], NULL);
+	 return 0;
+} 
+
+
+/* output
+Writer.         id = 1 
+Writer.         id = 2 
+Writer.         id = 3 
+Writer.         id = 4 
+        Reader.         id = 5 
+*/
