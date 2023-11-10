@@ -1,0 +1,88 @@
+ADDRESS BOOK
+
+#!bash/bin
+
+create_address_book()
+{
+	touch f1_file.txt
+	echo "address Book Created"
+}
+
+view_address_book()
+{
+	echo "Address book content"
+	echo "Name | Address | Mobile"
+	cat f1_file.txt
+}
+
+Insert_records()
+{
+	echo "Enter Name"
+	read name
+	
+	echo "Enter address"
+	read address
+	
+	echo "mob.no"
+	read mob
+	
+	
+	echo "$name | $address | $mob">>f1_file.txt
+}
+
+delet_record()
+{
+	echo "Enter"
+	read record
+	
+	if
+	grep -q "$record" f1_file.txt
+	then
+		sed -i "/$record/d" f1_file.txt
+	else
+		echo "Record not found"
+	fi		
+}
+
+update_record()
+{
+	echo "Enter old Name"
+	read oldname
+	
+	if
+	grep -q "$oldname" f1_file.txt
+	then
+		
+		echo "enter newaddress"
+		read newaddress
+		
+		echo "enter newmob"
+		read newmob
+		
+		sed -i "/$oldname/c\\$oldname | $newaddress | $newmob" f1_file.txt
+		echo "record updated"
+	else
+		echo "record not found"
+	fi		
+}
+
+while true
+	do 
+		echo "<---------operations--------->"
+		echo "1.create address book"
+		echo "2. view address book"
+		echo "3.insert"
+		echo "4.delete"
+		echo "5. update"
+		echo "enter your choice (1,2,3,4,5)"
+		read ch
+		
+		case $ch in
+		1)create_address_book;;
+		2)view_address_book;;
+		3)Insert_records;;
+		4)delet_record;;
+		5)update_record;;
+		*)echo "Invalid"
+		esac
+	done
