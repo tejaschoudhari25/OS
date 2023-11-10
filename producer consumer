@@ -1,0 +1,84 @@
+PRODUCER CONSUMER
+
+#include<stdio.h>
+#include<pthread.h>
+#include<semaphore.h>
+
+
+sem_t e, f, s;
+int in = 0;
+int out = 0;
+
+
+int buff[5];
+
+void *producer(void *arg)
+{
+int data = (int) arg; //value passes to data [i.e (int*) arg] is address other * for taking value from that address [void >> pointer >> int]
+sem_wait(&e);
+sem_wait(&s);
+
+buff[in] = data;
+printf("\nproducer [%d] put value in buffer[%d]",data,in);
+in = (in + 1)%5;
+
+sem_post(&s);
+sem_post(&f);
+//sleep(2);
+}
+
+void *consumer(void *arg)
+{
+int val;
+int data;
+do
+{
+sem_wait(&f);
+sem_wait(&s);
+
+data = buff[out];
+printf("\nconsumed data [%d]", out);
+out = (out + 1)%5;
+
+sem_post(&s);
+sem_post(&e);
+sem_getvalue(&e, &val);
+}
+while(val != 5);
+}
+
+void main()
+{
+pthread_t ptd[8], ctd;
+sem_init(&e, 0, 5);
+sem_init(&f, 0, 0);
+sem_init(&s, 0, 1);
+pthread_create(&ctd, NULL, consumer, NULL);
+for(int i = 0; i < 8; i++)
+{
+pthread_create(&ptd[i], NULL, producer, (void*)&i); //In last arg type cast of int i into void*
+//pthread_join(ptd[i], NULL);
+}
+
+//pthread_join(ctd, NULL);
+
+}
+
+OUTPUT:
+
+student@student-virtual-machine:~$ ./a.out
+
+producer [-909334140] put value in buffer[0]
+consumed data [0]
+producer [-909334140] put value in buffer[1]
+producer [-909334140] put value in buffer[2]
+consumed data [1]
+consumed data [2]
+producer [-909334140] put value in buffer[3]
+consumed data [3]
+producer [-909334140] put value in buffer[4]
+producer [-909334140] put value in buffer[0]
+consumed data [4]
+consumed data [0]
+producer [-909334140] put value in buffer[1]producer [-909334140] put value in buffer[1]
+producer [-909334140] put value in buffer[2]
