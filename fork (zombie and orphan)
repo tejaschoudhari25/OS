@@ -1,0 +1,81 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<sys/wait.h>
+
+void arrayStore(char* c_arr[],int* i_arr, int n)
+{
+	for(int i=0;i<n;i++)
+	{
+		i_arr[i] = atoi(c_arr[i+1]);
+	}
+}
+
+void arraySort(int* arr, int n, int order)
+{
+	for(int i=0;i<n-1;i++)
+	{
+		for(int j=0;j<n-i-1;j++)
+		{
+			if(order == -1)
+			{
+				if(arr[j]<arr[j+1])
+				{
+					int temp = arr[j];
+					arr[j] = arr[j+1];
+					arr[j+1] = temp;
+				}
+			}
+			else if(order == 1)
+			{
+				if(arr[j]>arr[j+1])
+				{
+					int temp = arr[j];
+					arr[j] = arr[j+1];
+					arr[j+1] = temp;
+				}
+			}
+		}
+	}
+}
+
+void arrayDisplay(int* arr, int n)
+{
+	printf("\nDisplaying Array.... \n");
+	for(int i=0;i<n;i++)
+	{
+		printf("%d\t",arr[i]);
+	}
+	printf("\n\n");
+}
+
+void main(int argc, char* argv[])
+{
+	int order;
+	int arr[argc-1];
+	int len = argc - 1;
+	arrayStore(argv,arr,len);	
+	
+	pid_t pid, tpid, status;
+	pid = fork();
+	if(pid == 0)
+	{
+		//sleep(5); //Orphan State
+		printf("\nChild Process with ID %d\n",getpid());
+		printf("Child's Parent ID %d\n",getppid());
+		order = -1;
+		arraySort(arr,len,order);
+		arrayDisplay(arr,len);
+	}
+	else
+	{
+		//sleep(5); //Zombie State
+		system("ps");
+		tpid = wait(&status);
+		printf("\nParent Process with ID %d \n",getpid());
+		order = 1;
+		arraySort(arr,len,order);
+		arrayDisplay(arr,len);
+	}
+}
