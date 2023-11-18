@@ -54,10 +54,10 @@ void main()
   sem_init(&f, 0, 0);
   sem_init(&s, 0, 1);
   pthread_create(&ctd, NULL, consumer, NULL);
-  for(int i = 0; i < 8; i++)
+  for (int i = 0; i < 8; i++) 
   {
-    pthread_create(&ptd[i], NULL, producer, (void*)&i); //In last arg type cast of int i into void*
-    //pthread_join(ptd[i], NULL);
+    int thread_arg = i;  // Create a separate variable for each thread
+    pthread_create(&ptd[i], NULL, producer, (void*)&thread_arg);
   }
   
   //pthread_join(ctd, NULL);
