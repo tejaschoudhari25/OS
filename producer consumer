@@ -1,84 +1,70 @@
-PRODUCER CONSUMER
-
+#include<unistd.h>
 #include<stdio.h>
-#include<pthread.h>
 #include<semaphore.h>
+#include<pthread.h>
 
+int buffer[5];
+int in,out;
+sem_t s,f,e;
 
-sem_t e, f, s;
-int in = 0;
-int out = 0;
-
-
-int buff[5];
-
-void *producer(void *arg)
-{
-  int data = (int) arg; //value passes to data [i.e (int*) arg] is address other * for taking value from that address [void >> pointer >> int]
-  sem_wait(&e);
-  sem_wait(&s);
-
-  buff[in] = data;
-  printf("\nproducer [%d] put value in buffer[%d]",data,in);
-  in = (in + 1)%5;
-  
-  sem_post(&s);
-  sem_post(&f);
-  //sleep(2);
-}
-
-void *consumer(void *arg)
-{
-  int val;
-  int data;
-  do
-  {
-    sem_wait(&f);
+void*producer(void*arg)
+{ 
+    sem_wait(&e);
     sem_wait(&s);
-    
-    data = buff[out];
-    printf("\nconsumed data [%d]", out);
-    out = (out + 1)%5;
-    
+    int data;
+    printf("Enter the value");
+    scanf("\n%d",&data);
+    buffer[in]=data;
+    printf("producer:%d \n", data); 
+    printf(" Producer id is=%ld \n",pthread_self());
     sem_post(&s);
-    sem_post(&e);
-    sem_getvalue(&e, &val);
-  }
-  while(val != 5);
+    sem_post(&f);
+    sleep(2);
+    in=(in+1)%5;
+    sem_post(&s);
+    sem_post(&f);
+    sleep(2);
+    
 }
 
-void main()
+void*consumer(void*arg)
 {
-  pthread_t ptd[8], ctd;
-  sem_init(&e, 0, 5);
-  sem_init(&f, 0, 0);
-  sem_init(&s, 0, 1);
-  pthread_create(&ctd, NULL, consumer, NULL);
-  for (int i = 0; i < 8; i++) 
-  {
-    int thread_arg = i;  // Create a separate variable for each thread
-    pthread_create(&ptd[i], NULL, producer, (void*)&thread_arg);
-  }
-  
-  //pthread_join(ctd, NULL);
-  
+   int conti =0;
+   do
+   {
+   sem_wait(&f);
+   sem_wait(&s);
+   int data=buffer[out];
+   printf("Consumer Thread:%d \n", data); 
+   printf(" Consumer id is=%ld \n",pthread_self());
+   out=(out+1)%5;
+   
+   sem_post(&s);
+   sem_post(&e);
+ sem_getvalue(&e,&conti);
+ }while(conti!=5);
 }
 
-OUTPUT:
 
-student@student-virtual-machine:~$ ./a.out
-
-producer [-909334140] put value in buffer[0]
-consumed data [0]
-producer [-909334140] put value in buffer[1]
-producer [-909334140] put value in buffer[2]
-consumed data [1]
-consumed data [2]
-producer [-909334140] put value in buffer[3]
-consumed data [3]
-producer [-909334140] put value in buffer[4]
-producer [-909334140] put value in buffer[0]
-consumed data [4]
-consumed data [0]
-producer [-909334140] put value in buffer[1]producer [-909334140] put value in buffer[1]
-producer [-909334140] put value in buffer[2]
+int main()
+{  
+   pthread_t p_tid[5],c_tid;
+   
+   sem_init(&s,0,1);
+   sem_init(&e,0,5);
+   sem_init(&f,0,0);
+   
+   for(int i=0;i<5;i++)
+   {
+      pthread_create(&p_tid[i],NULL,producer,NULL);
+   }
+    pthread_create(&c_tid,NULL,consumer,NULL);
+    for(int i=0;i<5;i++)
+   {
+      pthread_join(p_tid[i],NULL);
+   }
+    pthread_join(c_tid,NULL);
+    
+   return 0;
+    
+}
